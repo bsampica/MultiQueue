@@ -1,4 +1,4 @@
-namespace MultiQueue;
+namespace MultiQueue.Models;
 
 public class WeatherForecast
 {
