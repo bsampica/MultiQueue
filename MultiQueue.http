@@ -1,0 +1,6 @@
+@MultiQueue_HostAddress = http://localhost:5003
+
+GET {{MultiQueue_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
