@@ -25,13 +25,11 @@ public class Program
 
         // Add the hosted services
         builder.Services.AddHostedService<QueueHostedService>();
-
+        builder.Services.AddHostedService<TimedBackgroundService>();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-
-
 
 
         var app = builder.Build();
