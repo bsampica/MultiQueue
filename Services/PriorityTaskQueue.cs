@@ -6,7 +6,7 @@ namespace MultiQueue.Services
     public class PriorityTaskQueue
     {
         private readonly ILogger<PriorityTaskQueue> _logger;
-        private readonly PriorityQueue<IHavePriority<int>, int> _priorityQueue = new();
+        private readonly PriorityQueue<PriorityTask, int> _priorityQueue = new();
 
         public PriorityTaskQueue(ILogger<PriorityTaskQueue> logger)
         {
@@ -18,9 +18,9 @@ namespace MultiQueue.Services
             _priorityQueue.Enqueue(task, task.GetPriority());
         }
 
-        public IHavePriority<int> Dequeue() => _priorityQueue.Dequeue();
+        public PriorityTask Dequeue() => _priorityQueue.Dequeue();
 
-        public IHavePriority<int> Peek() => _priorityQueue.Peek();
+        public PriorityTask Peek() => _priorityQueue.Peek();
 
 
         public int Count() => _priorityQueue.Count;

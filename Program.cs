@@ -1,4 +1,5 @@
 
+using Hangfire;
 using MultiQueue.Services;
 
 namespace MultiQueue;
@@ -15,17 +16,30 @@ public class Program
         // Add services to the container.
         builder.Services.AddControllers();
 
-        // Setup the background queue and monitor
-        builder.Services.AddSingleton<MonitorBackgroundQueue>();
-        builder.Services.AddSingleton<IBackgroundTaskQueue>(ctx =>
+        // Setup Hangfire
+        builder.Services.AddHangfire(config =>
         {
-            var queueCapacity = 100;
-            return new BackgroundTaskQueue(queueCapacity);
+            config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(
+                builder.Configuration.GetConnectionString("HangfireConnection"));
         });
 
+        builder.Services.AddHangfireServer();
+
+
+        // Setup the background queue and monitor
+        // builder.Services.AddSingleton<MonitorBackgroundQueue>();
+        // builder.Services.AddSingleton<IBackgroundTaskQueue>(ctx =>
+        // {
+        //    var queueCapacity = 100;
+        //    return new BackgroundTaskQueue(queueCapacity);
+        // });
+
         // Add the hosted services
-        builder.Services.AddHostedService<QueueHostedService>();
-        builder.Services.AddHostedService<TimedBackgroundService>();
+        // builder.Services.AddHostedService<QueueHostedService>();
+        // builder.Services.AddHostedService<TimedBackgroundService>();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
@@ -34,8 +48,8 @@ public class Program
 
         var app = builder.Build();
 
-        //var queueService = app.Services.GetRequiredService<QueueService>();
-        //queueService.StartAsync(_cancellationTokenSource.Token);
+        // var queueService = app.Services.GetRequiredService<QueueService>();
+        // queueService.StartAsync(_cancellationTokenSource.Token);
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -46,9 +60,10 @@ public class Program
 
         app.UseAuthorization();
         app.MapControllers();
+        app.UseHangfireDashboard();
 
-        var monitorLoop = app.Services.GetRequiredService<MonitorBackgroundQueue>();
-        monitorLoop.StartMonitor();
+        // var monitorLoop = app.Services.GetRequiredService<MonitorBackgroundQueue>();
+        // monitorLoop.StartMonitor();
 
         app.Run();
 
