@@ -1,6 +1,7 @@
 
 using Hangfire;
 using MultiQueue.Services;
+using System.Globalization;
 
 namespace MultiQueue;
 
@@ -19,14 +20,25 @@ public class Program
         // Setup Hangfire
         builder.Services.AddHangfire(config =>
         {
-            config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+            config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseColouredConsoleLogProvider()
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
+            .UseIgnoredAssemblyVersionTypeResolver()
+            .UseRecommendedSerializerSettings()
+            .UseResultsInContinuations()
+            .UseDefaultCulture(CultureInfo.CurrentCulture)
             .UseSqlServerStorage(
                 builder.Configuration.GetConnectionString("HangfireConnection"));
         });
 
-        builder.Services.AddHangfireServer();
+        builder.Services.AddHangfireServer(options =>
+        {
+            // options.IsLightweightServer = true;
+            options.WorkerCount = Environment.ProcessorCount * 20;
+            // options.ServerTimeout = TimeSpan.FromSeconds(30);
+            // options.ServerCheckInterval = TimeSpan.FromSeconds(30);
+        });
 
 
         // Setup the background queue and monitor
@@ -39,7 +51,7 @@ public class Program
 
         // Add the hosted services
         // builder.Services.AddHostedService<QueueHostedService>();
-        // builder.Services.AddHostedService<TimedBackgroundService>();
+        builder.Services.AddHostedService<TimedBackgroundService>();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
