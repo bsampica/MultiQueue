@@ -10,6 +10,7 @@ namespace MultiQueue.Services
         private readonly IBackgroundJobClient _jobClient;
         private readonly ILogger<TimedBackgroundService> _logger;
         private int _executionCount;
+        private int _countDownTimer = 0;
 
         public TimedBackgroundService(ILogger<TimedBackgroundService> logger, IBackgroundJobClient backgroundJobClient)
         {
@@ -24,13 +25,22 @@ namespace MultiQueue.Services
             // When the timer should have no due-time, then do the work once now.
             RunJobScheduler();
 
-            using PeriodicTimer timer = new(TimeSpan.FromMinutes(10));
+            using PeriodicTimer timer = new(TimeSpan.FromSeconds(60));
 
             try
             {
                 while (await timer.WaitForNextTickAsync(stoppingToken))
                 {
-                    RunJobScheduler();
+                    if (_countDownTimer < 10)
+                    {
+                        _countDownTimer++;
+                        _logger.LogInformation($"Countdown Timer: {_countDownTimer}");
+                    }
+                    else if (_countDownTimer >= 10)
+                    {
+                        _countDownTimer = 0;
+                        RunJobScheduler();
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -43,8 +53,8 @@ namespace MultiQueue.Services
         private void RunJobScheduler()
         {
             int count = Interlocked.Increment(ref _executionCount);
-            _logger.LogInformation("Timed Hosted Service is working. Count: {Count}", count);
-            _logger.LogInformation("Scheduling a bunch of jobs, each takes 0.5 seconds to run");
+            _logger.LogInformation($"Timed Hosted Service is working. Count: {count}");
+            _logger.LogInformation("Scheduling 5000 jobs, each takes  2 seconds to run");
 
             for (int i = 0; i <= 5000; i++)
             {
@@ -52,7 +62,7 @@ namespace MultiQueue.Services
                 var job2 = _jobClient.ContinueJobWith<TimedBackgroundService>(job1, x => x.DoSomeLongWork(null));
             }
 
-
+            _logger.LogInformation("Scheduling 500 Jobs....complete!");
         }
 
         [ContinuationsSupport(pushResults: true)]
