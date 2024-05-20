@@ -80,7 +80,7 @@ namespace MultiQueue.Services
 
             _logger.LogInformation($"Context Received: {context?.BackgroundJob.Id}:{context?.Items.ToString()}");
             _logger.LogInformation($"Job Parameters: {jobParameter}");
-            _logger.LogInformation($"Long running task is starting. {DateTime.Now}: Finish expected in 10 seconds");
+            _logger.LogInformation($"Long running task is starting. {DateTime.Now}: Finish expected in 20 seconds");
 
 
             await Task.Delay(TimeSpan.FromSeconds(20));
