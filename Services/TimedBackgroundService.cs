@@ -34,7 +34,7 @@ namespace MultiQueue.Services
                     if (_countDownTimer < 10)
                     {
                         _countDownTimer++;
-                        _logger.LogInformation($"Countdown Timer: {_countDownTimer}");
+                        _logger.LogInformation($"Countdown Timer: {(_countDownTimer - 10).ToString()}");
                     }
                     else if (_countDownTimer >= 10)
                     {
