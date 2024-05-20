@@ -25,18 +25,18 @@ namespace MultiQueue.Services
             // When the timer should have no due-time, then do the work once now.
             RunJobScheduler();
 
-            using PeriodicTimer timer = new(TimeSpan.FromSeconds(60));
+            using PeriodicTimer timer = new(TimeSpan.FromSeconds(1));
 
             try
             {
                 while (await timer.WaitForNextTickAsync(stoppingToken))
                 {
-                    if (_countDownTimer < 10)
+                    if (_countDownTimer < 60)
                     {
                         _countDownTimer++;
-                        _logger.LogInformation($"Countdown Timer: {(10 - _countDownTimer)}");
+                        _logger.LogInformation($"Countdown Timer: {(60 - _countDownTimer)}");
                     }
-                    else if (_countDownTimer >= 10)
+                    else if (_countDownTimer >= 60)
                     {
                         _countDownTimer = 0;
                         RunJobScheduler();

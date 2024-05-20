@@ -6,7 +6,7 @@ namespace MultiQueue.Services
         private readonly IBackgroundTaskQueue _taskQueue;
         private readonly ILogger<MonitorBackgroundQueue> _logger;
         private readonly IHostApplicationLifetime _applicationLifetime;
-        private readonly CancellationToken _cancellationToken;
+        private readonly CancellationTokenSource _cancellationToken;
 
         public MonitorBackgroundQueue(IBackgroundTaskQueue taskQueue,
             ILogger<MonitorBackgroundQueue> logger,
@@ -15,6 +15,7 @@ namespace MultiQueue.Services
             _taskQueue = taskQueue;
             _logger = logger;
             _applicationLifetime = applicationLifetime;
+            _cancellationToken = new CancellationTokenSource();
         }
         public void StartMonitor()
         {
