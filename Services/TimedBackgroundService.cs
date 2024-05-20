@@ -83,7 +83,7 @@ namespace MultiQueue.Services
             _logger.LogInformation($"Long running task is starting. {DateTime.Now}: Finish expected in 60 seconds");
 
 
-            await Task.Delay(TimeSpan.FromSeconds(60));
+            await Task.Delay(TimeSpan.FromSeconds(30));
 
             _logger.LogInformation($"Long running task is complete. {DateTime.Now}");
         }
