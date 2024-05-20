@@ -22,15 +22,15 @@ namespace MultiQueue.Services
             _logger.LogInformation("Timed Hosted Service running.");
 
             // When the timer should have no due-time, then do the work once now.
-            DoWork();
+            RunJobScheduler();
 
-            using PeriodicTimer timer = new(TimeSpan.FromMinutes(1));
+            using PeriodicTimer timer = new(TimeSpan.FromMinutes(10));
 
             try
             {
                 while (await timer.WaitForNextTickAsync(stoppingToken))
                 {
-                    DoWork();
+                    RunJobScheduler();
                 }
             }
             catch (OperationCanceledException)
@@ -40,17 +40,16 @@ namespace MultiQueue.Services
         }
 
         // Could also be a async method, that can be awaited in ExecuteAsync above
-        private void DoWork()
+        private void RunJobScheduler()
         {
             int count = Interlocked.Increment(ref _executionCount);
             _logger.LogInformation("Timed Hosted Service is working. Count: {Count}", count);
-
             _logger.LogInformation("Scheduling a bunch of jobs, each takes 0.5 seconds to run");
 
-            for (int i = 0; i <= 1000; i++)
+            for (int i = 0; i <= 5000; i++)
             {
                 var job1 = _jobClient.Enqueue<TimedBackgroundService>(x => x.WorkerFromHangfire(i));
-                var job2 = _jobClient.ContinueJobWith<TimedBackgroundService>(job1, x => x.DoSomeLongWork(i, null));
+                var job2 = _jobClient.ContinueJobWith<TimedBackgroundService>(job1, x => x.DoSomeLongWork(null));
             }
 
 
@@ -59,13 +58,13 @@ namespace MultiQueue.Services
         [ContinuationsSupport(pushResults: true)]
         public int WorkerFromHangfire(int index)
         {
-            Thread.Sleep(500);
+            Thread.Sleep(2000);
             Console.WriteLine($"Did something cool, Hangfire Job: {index} - Ran at {DateTime.Now.ToShortTimeString()}");
             return index;
         }
 
 
-        public async Task DoSomeLongWork(int parentId, PerformContext? context)
+        public async Task DoSomeLongWork(PerformContext? context)
         {
             var jobParameter = context?.GetJobParameter<int>("AntecedentResult");
 
