@@ -34,7 +34,7 @@ namespace MultiQueue.Services
                     if (_countDownTimer < 10)
                     {
                         _countDownTimer++;
-                        _logger.LogInformation($"Countdown Timer: {(_countDownTimer - 10)}");
+                        _logger.LogInformation($"Countdown Timer: {(10 - _countDownTimer)}");
                     }
                     else if (_countDownTimer >= 10)
                     {
@@ -80,10 +80,10 @@ namespace MultiQueue.Services
 
             _logger.LogInformation($"Context Received: {context?.BackgroundJob.Id}:{context?.Items.ToString()}");
             _logger.LogInformation($"Job Parameters: {jobParameter}");
-            _logger.LogInformation($"Long running task is starting. {DateTime.Now}: Finish expected in 20 seconds");
+            _logger.LogInformation($"Long running task is starting. {DateTime.Now}: Finish expected in 60 seconds");
 
 
-            await Task.Delay(TimeSpan.FromSeconds(20));
+            await Task.Delay(TimeSpan.FromSeconds(60));
 
             _logger.LogInformation($"Long running task is complete. {DateTime.Now}");
         }
