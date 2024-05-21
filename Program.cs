@@ -35,7 +35,7 @@ public class Program
         builder.Services.AddHangfireServer(options =>
         {
             // options.IsLightweightServer = true;
-            options.WorkerCount = Environment.ProcessorCount * 20;
+            options.WorkerCount = Environment.ProcessorCount * 100;
             // options.ServerTimeout = TimeSpan.FromSeconds(30);
             // options.ServerCheckInterval = TimeSpan.FromSeconds(30);
         });

@@ -10,7 +10,6 @@ namespace MultiQueue.Services
         private readonly IBackgroundJobClient _jobClient;
         private readonly ILogger<TimedBackgroundService> _logger;
         private int _executionCount;
-        private int _countDownTimer = 0;
 
         public TimedBackgroundService(ILogger<TimedBackgroundService> logger, IBackgroundJobClient backgroundJobClient)
         {
@@ -25,22 +24,13 @@ namespace MultiQueue.Services
             // When the timer should have no due-time, then do the work once now.
             RunJobScheduler();
 
-            using PeriodicTimer timer = new(TimeSpan.FromSeconds(1));
+            using PeriodicTimer timer = new(TimeSpan.FromMinutes(10));
 
             try
             {
                 while (await timer.WaitForNextTickAsync(stoppingToken))
                 {
-                    if (_countDownTimer < 60)
-                    {
-                        _countDownTimer++;
-                        _logger.LogInformation($"Countdown Timer: {(60 - _countDownTimer)}");
-                    }
-                    else if (_countDownTimer >= 60)
-                    {
-                        _countDownTimer = 0;
-                        RunJobScheduler();
-                    }
+                    RunJobScheduler();
                 }
             }
             catch (OperationCanceledException)
@@ -56,7 +46,7 @@ namespace MultiQueue.Services
             _logger.LogInformation($"Timed Hosted Service is working. Count: {count}");
             _logger.LogInformation("Scheduling 5000 jobs, each takes  2 seconds to run");
 
-            for (int i = 0; i <= 5000; i++)
+            for (int i = 0; i <= 10000; i++)
             {
                 var job1 = _jobClient.Enqueue<TimedBackgroundService>(x => x.WorkerFromHangfire(i));
                 var job2 = _jobClient.ContinueJobWith<TimedBackgroundService>(job1, x => x.DoSomeLongWork(null));
