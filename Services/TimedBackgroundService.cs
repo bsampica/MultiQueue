@@ -2,6 +2,9 @@
 
 using Hangfire;
 using Hangfire.Server;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using System.Diagnostics;
 
 namespace MultiQueue.Services
 {
@@ -10,33 +13,25 @@ namespace MultiQueue.Services
         private readonly IBackgroundJobClient _jobClient;
         private readonly ILogger<TimedBackgroundService> _logger;
         private int _executionCount;
+        private readonly IServiceProvider _serviceProvider;
+        private CancellationToken tokenReference;
 
-        public TimedBackgroundService(ILogger<TimedBackgroundService> logger, IBackgroundJobClient backgroundJobClient)
+
+        public TimedBackgroundService(ILogger<TimedBackgroundService> logger, IBackgroundJobClient backgroundJobClient, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _jobClient = backgroundJobClient;
+            _serviceProvider = serviceProvider;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Timed Hosted Service running.");
+            _logger.LogInformation("Timed Hosted Service is Starting.");
 
-            // When the timer should have no due-time, then do the work once now.
-            RunJobScheduler();
-
-            using PeriodicTimer timer = new(TimeSpan.FromMinutes(10));
-
-            try
-            {
-                while (await timer.WaitForNextTickAsync(stoppingToken))
-                {
-                    RunJobScheduler();
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogInformation("Timed Hosted Service is stopping.");
-            }
+            tokenReference = stoppingToken;
+            PrintStartMessage();
+            return Task.CompletedTask;
         }
 
         // Could also be a async method, that can be awaited in ExecuteAsync above
@@ -76,6 +71,73 @@ namespace MultiQueue.Services
             await Task.Delay(TimeSpan.FromSeconds(30));
 
             _logger.LogInformation($"Long running task is complete. {DateTime.Now}");
+        }
+
+        private void PrintAddress()
+        {
+            _logger.LogInformation("Checking Addresses");
+            var server = _serviceProvider.GetRequiredService<IServer>();
+            var addressFeature = server.Features.Get<IServerAddressesFeature>();
+            foreach (var address in addressFeature?.Addresses!)
+            {
+                _logger.LogInformation($"Listening on: {address}");
+            }
+
+        }
+
+        public void PrintStartMessage()
+        {
+            var lifetime = _serviceProvider.GetRequiredService<IHostApplicationLifetime>();
+            lifetime.ApplicationStarted.Register(() =>
+            {
+                _logger.LogInformation("Application Started, by triggered event in Timed Background Service");
+                PrintAddress();
+                Task.Run(async () => await CalculatePrimeNumbers(1, 1_000_000));
+            });
+        }
+        public void StopApplication()
+        {
+            _logger.LogInformation("StopApplication called in TimedBackgroundService");
+        }
+
+        private Task CalculatePrimeNumbers(int startNumber, int endNumber)
+        {
+            Stopwatch sw = new();
+            sw.Start();
+            var primeNumbers = new List<int>();
+            _logger.LogInformation($"Running CPU Intensive Work..." +
+                $"Calculating Prime Numbers between {startNumber} and {endNumber}");
+
+            for (int i = startNumber; i <= endNumber; i++)
+            {
+                int counter = 0;
+                for (int j = 2; j <= i / 2; j++)
+                {
+                    if (i % j == 0)
+                    {
+                        counter++;
+                        return Task.FromException(new Exception("Error in calculation"));
+                    }
+                }
+                if (counter == 0 && i != 1)
+                {
+                    primeNumbers.Add(i);
+                }
+            }
+            _logger.LogInformation($"Calculation Done, found {primeNumbers.Count} " +
+                $"prime numbers, the last is {primeNumbers.Last()}, calculation took: {FormatMilliseconds(sw.Elapsed.TotalMilliseconds)}");
+
+            return Task.CompletedTask;
+        }
+
+        private string FormatMilliseconds(double ms)
+        {
+            TimeSpan t = TimeSpan.FromMilliseconds(ms);
+            return string.Format("{0:D2}h:{1:D2}m:{2:D2}s:{3:D3}ms",
+                t.Hours,
+                t.Minutes,
+                t.Seconds,
+                t.Milliseconds);
         }
     }
 }

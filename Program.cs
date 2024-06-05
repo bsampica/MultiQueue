@@ -1,5 +1,6 @@
 
 using Hangfire;
+using MultiQueue.Hubs;
 using MultiQueue.Services;
 using System.Globalization;
 
@@ -9,13 +10,14 @@ public class Program
 {
     private static readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
 
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
         builder.Services.AddControllers();
+        builder.Services.AddSignalR(options => options.EnableDetailedErrors = true);
 
         // Setup Hangfire
         builder.Services.AddHangfire(config =>
@@ -34,24 +36,13 @@ public class Program
 
         builder.Services.AddHangfireServer(options =>
         {
-            // options.IsLightweightServer = true;
-            options.WorkerCount = Environment.ProcessorCount * 100;
-            // options.ServerTimeout = TimeSpan.FromSeconds(30);
-            // options.ServerCheckInterval = TimeSpan.FromSeconds(30);
+            options.WorkerCount = 300;
+
         });
 
 
-        // Setup the background queue and monitor
-        // builder.Services.AddSingleton<MonitorBackgroundQueue>();
-        // builder.Services.AddSingleton<IBackgroundTaskQueue>(ctx =>
-        // {
-        //    var queueCapacity = 100;
-        //    return new BackgroundTaskQueue(queueCapacity);
-        // });
+        // builder.Services.AddHostedService<TimedBackgroundService>();
 
-        // Add the hosted services
-        // builder.Services.AddHostedService<QueueHostedService>();
-        builder.Services.AddHostedService<TimedBackgroundService>();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
@@ -59,9 +50,16 @@ public class Program
 
 
         var app = builder.Build();
+        var spinWait = new SpinWaitService();
 
-        // var queueService = app.Services.GetRequiredService<QueueService>();
-        // queueService.StartAsync(_cancellationTokenSource.Token);
+        Console.WriteLine("SPIN UNTIL - BLOCKING");
+        // This should be a blocking call
+        spinWait.SpinUntil(TimeSpan.FromSeconds(10));
+        Console.WriteLine("AFTER SPIN UNTIL - BLOCKING");
+
+        Console.WriteLine("SPIN UNTIL - NON BLOCKING");
+        _ = spinWait.SpinUntilAsync(TimeSpan.FromSeconds(10));
+        Console.WriteLine("AFTER SPINUNTIL - NON BLOCKING");
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -73,9 +71,7 @@ public class Program
         app.UseAuthorization();
         app.MapControllers();
         app.UseHangfireDashboard();
-
-        // var monitorLoop = app.Services.GetRequiredService<MonitorBackgroundQueue>();
-        // monitorLoop.StartMonitor();
+        app.MapHub<QueueHub>("/queuehub");
 
         app.Run();
 
