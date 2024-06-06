@@ -2,8 +2,6 @@ namespace MultiQueue.Services
 {
     public class SpinWaitService
     {
-        public SpinWaitService() { }
-
         public void SpinUntil(TimeSpan duration)
         {
             HandleInternalSpin(duration);

@@ -1,17 +1,11 @@
 ﻿
 namespace MultiQueue.Services
 {
-    public class QueueHostedService : BackgroundService
+    public class QueueHostedService(IBackgroundTaskQueue taskQueue, ILogger<QueueHostedService> logger) : BackgroundService
     {
-        private readonly ILogger<QueueHostedService> _logger;
+        private readonly ILogger<QueueHostedService> _logger = logger;
 
-        public IBackgroundTaskQueue TaskQueue { get; }
-
-        public QueueHostedService(IBackgroundTaskQueue taskQueue, ILogger<QueueHostedService> logger)
-        {
-            TaskQueue = taskQueue;
-            _logger = logger;
-        }
+        public IBackgroundTaskQueue TaskQueue { get; } = taskQueue;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {

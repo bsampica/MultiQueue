@@ -8,22 +8,13 @@ using System.Diagnostics;
 
 namespace MultiQueue.Services
 {
-    public class TimedBackgroundService : BackgroundService
+    public class TimedBackgroundService(ILogger<TimedBackgroundService> logger, IBackgroundJobClient backgroundJobClient, IServiceProvider serviceProvider) : BackgroundService
     {
-        private readonly IBackgroundJobClient _jobClient;
-        private readonly ILogger<TimedBackgroundService> _logger;
+        private readonly IBackgroundJobClient _jobClient = backgroundJobClient;
+        private readonly ILogger<TimedBackgroundService> _logger = logger;
         private int _executionCount;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider _serviceProvider = serviceProvider;
         private CancellationToken tokenReference;
-
-
-        public TimedBackgroundService(ILogger<TimedBackgroundService> logger, IBackgroundJobClient backgroundJobClient, IServiceProvider serviceProvider)
-        {
-            _logger = logger;
-            _jobClient = backgroundJobClient;
-            _serviceProvider = serviceProvider;
-        }
-
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {

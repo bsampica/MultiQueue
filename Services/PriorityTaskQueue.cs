@@ -3,15 +3,10 @@
 namespace MultiQueue.Services
 {
     // This is the middle ware that the hosted service will communicate with
-    public class PriorityTaskQueue
+    public class PriorityTaskQueue(ILogger<PriorityTaskQueue> logger)
     {
-        private readonly ILogger<PriorityTaskQueue> _logger;
+        private readonly ILogger<PriorityTaskQueue> _logger = logger;
         private readonly PriorityQueue<PriorityTask, int> _priorityQueue = new();
-
-        public PriorityTaskQueue(ILogger<PriorityTaskQueue> logger)
-        {
-            _logger = logger;
-        }
 
         public void Enqueue(PriorityTask task)
         {

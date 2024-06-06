@@ -1,22 +1,15 @@
 ﻿
 namespace MultiQueue.Services
 {
-    public class MonitorBackgroundQueue : IMonitorQueue
+    public class MonitorBackgroundQueue(IBackgroundTaskQueue taskQueue,
+        ILogger<MonitorBackgroundQueue> logger,
+        IHostApplicationLifetime applicationLifetime) : IMonitorQueue
     {
-        private readonly IBackgroundTaskQueue _taskQueue;
-        private readonly ILogger<MonitorBackgroundQueue> _logger;
-        private readonly IHostApplicationLifetime _applicationLifetime;
-        private readonly CancellationTokenSource _cancellationToken;
+        private readonly IBackgroundTaskQueue _taskQueue = taskQueue;
+        private readonly ILogger<MonitorBackgroundQueue> _logger = logger;
+        private readonly IHostApplicationLifetime _applicationLifetime = applicationLifetime;
+        private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
-        public MonitorBackgroundQueue(IBackgroundTaskQueue taskQueue,
-            ILogger<MonitorBackgroundQueue> logger,
-            IHostApplicationLifetime applicationLifetime)
-        {
-            _taskQueue = taskQueue;
-            _logger = logger;
-            _applicationLifetime = applicationLifetime;
-            _cancellationToken = new CancellationTokenSource();
-        }
         public void StartMonitor()
         {
             _logger.LogInformation("MonitorAsync Loop is starting");
