@@ -40,27 +40,20 @@ public class Program
 
         });
 
-
         // builder.Services.AddHostedService<TimedBackgroundService>();
-
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-
         var app = builder.Build();
         var spinWait = new SpinWaitService();
-
-        Console.WriteLine("SPIN UNTIL - BLOCKING");
+       
         // This should be a blocking call
         spinWait.SpinUntil(TimeSpan.FromSeconds(10));
-        Console.WriteLine("AFTER SPIN UNTIL - BLOCKING");
 
-        Console.WriteLine("SPIN UNTIL - NON BLOCKING");
+        // This should be a non-blocking call
         _ = spinWait.SpinUntilAsync(TimeSpan.FromSeconds(10));
-        Console.WriteLine("AFTER SPINUNTIL - NON BLOCKING");
-
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
