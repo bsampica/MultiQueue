@@ -10,7 +10,7 @@ public class Program
 {
     private static readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
 
         var builder = WebApplication.CreateBuilder(args);
@@ -40,20 +40,14 @@ public class Program
 
         });
 
-        // builder.Services.AddHostedService<TimedBackgroundService>();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
-        var spinWait = new SpinWaitService();
-       
-        // This should be a blocking call
-        spinWait.SpinUntil(TimeSpan.FromSeconds(10));
 
-        // This should be a non-blocking call
-        _ = spinWait.SpinUntilAsync(TimeSpan.FromSeconds(10));
+
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
